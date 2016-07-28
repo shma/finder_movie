@@ -39,4 +39,13 @@ class ofApp : public ofBaseApp{
         visionLoader visionLoader;
     
         ofImage image;
+    
+        float videoSpeed = 1;
+    
+        int beforeRate = 0;
+        int timer = 400;
+    
+        bool display;
+    
+        vector<string> words;
 };

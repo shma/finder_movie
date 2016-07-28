@@ -1,12 +1,5 @@
 #include "ofApp.h"
-float videoSpeed = 1;
 
-int beforeRate = 0;
-int timer = 400;
-
-bool display;
-
-vector<string> words;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -57,22 +50,19 @@ void ofApp::update(){
         if (sec > 10) {
             //cout << rates[sec][1].asInt() << endl;
             int currentRate = rates[sec][1].asInt();
-            int beforeRate = rates[sec - 5][1].asInt();
+            int beforeRate = rates[sec - 10][1].asInt();
             if (abs(currentRate - beforeRate) >= 10) {
                 videoSpeed = 1;
                 myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,false);
                 timer = 0;
+                display = true;
             }
-            display = true;
         }
     }
-    
-    
+
     myFbo.begin();
     video.draw(0, 0, 1280, 720);
     myFbo.end();
-    
-
     
     if(loading==true && !visionLoader.isThreadRunning()){
         vision.parse(visionLoader.json);
@@ -85,6 +75,8 @@ void ofApp::update(){
             words.push_back(vision["responses"][0]["labelAnnotations"][i]["description"].asString());
         }
     }
+    
+    timer++;
 }
 
 //--------------------------------------------------------------
@@ -97,15 +89,20 @@ void ofApp::draw(){
             visionImage.grabScreen(10, 10, 1280, 720);
             visionImage.save("visionImage.png");
             
+
+            
             visionLoader.setup(ofFilePath::getAbsolutePath("visionImage.png"));
+            
             loading = true;
             visionLoader.startThread();
+            
         }
     }
     
     ofSetColor(255, 255, 255);
     if (display) {
         string word = ofJoinString(words, ",");
+        visionImage.draw(100, 850, 320, 180);
         font.drawString(word , 100, 800);
     }
 }
