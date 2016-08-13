@@ -1,16 +1,10 @@
 #include "ofApp.h"
 
-bool apiMode = false;
-string b;
-int cacheCount;
-int currentRate;
-float currentTaion;
-int acceleration;
-
-vector<string> extractedWords;
-
 // ここに該当ファイルを入れるだけでよいようにする。
-string targetDate = "20160807";
+string targetDate = "20160805";
+
+// 通常再生するときに再生する秒数
+int normalPlayTime = 300;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -18,8 +12,9 @@ void ofApp::setup(){
     // Init
     ofBackground(0, 0, 0);
     ofSetFrameRate(60);
-    myFbo.allocate(640,360);
-    myGlitch.setup(&myFbo);
+    
+    
+    // フォント設定
     font.load("Futura.ttc", 36);
     fontSmall.load("Futura.ttc", 18);
     
@@ -27,30 +22,29 @@ void ofApp::setup(){
     ofVideoPlayer v;
     videos.push_back(v);
     
-    videos[0].load("20160727/20160727.mov");
+    videos[0].load(targetDate + "/movie.mov");
     videos[0].play();
     
-    video.load("20160807/0807_yanagase.mov");
-    video.play();
     
     ofFbo f;
     f.allocate(640,360);
     fbos.push_back(f);
     
-    string rateFile = "20160807/2016_0807_rate.json";
-    bool rateSuccessful = rates.open(rateFile);
+    myGlitch.setup(&fbos[0]);
     
-    if (!rateSuccessful) {
-        ofLogError("ofApp::setup")  << "Failed to parse JSON" << endl;
+    // GUI Set up
+    gui.setup();
+    gui.add(rateThreshold.setup("rate", 100, 50, 180));
+    
+    // JSON 読み込み
+    setupJsons();
+    
+    // Vision API
+    for(int i; i < vision.size(); i++) {
+        cout << vision[i].size() << endl;
     }
     
-    string taionFile = "20160807/2016_0807_taion.json";
-    bool taionSuccessful = taions.open(taionFile);
-    
-    if (!taionSuccessful) {
-        ofLogError("ofApp::setup")  << "Failed to parse JSON" << endl;
-    }
-
+    /**
     if (!apiMode) {
         string visionFile = "20160727_vision.json";
         bool visionSuccessful = vision.open(visionFile);
@@ -60,61 +54,53 @@ void ofApp::setup(){
             ofLogError("ofApp::setup")  << "Failed to parse JSON" << endl;
         }
     }
-    
-    // Vision API
-    for(int i; i < vision.size(); i++) {
-        cout << vision[i].size() << endl;
-    }
+     **/
     
     loading = false;
 }
 
+int sec = 0;
 //--------------------------------------------------------------
 void ofApp::update(){
-
-    if (timer > 300) {
-        videoSpeed = 10;
+    if (timer > normalPlayTime) {
+        videoSpeed = 5;
         myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,true);
         display = false;
     }
     
     videos[0].update();
+    videos[0].setSpeed(videoSpeed);
     
-    video.setSpeed(videoSpeed);
-    video.update();
-    
+    // Framerateと生体情報を同期させるための処理
     int oneMin = 60;
     
-    if (video.getCurrentFrame() >= oneMin) {
-        int sec = video.getCurrentFrame() / oneMin;
+    if (videos[0].getCurrentFrame() >= oneMin) {
+        sec = videos[0].getCurrentFrame() / oneMin;
         
         if (sec == 10) {
             beforeRate = rates[sec][1].asInt();
         }
-        
-        if (sec > 10) {
-            currentRate = rates[sec][1].asInt();
-            int beforeRate = rates[sec - 10][1].asInt();
-            acceleration = currentRate - beforeRate;
-            if (abs(acceleration) >= 9 && timer > 300) {
-                videoSpeed = 1;
-                myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,false);
-                timer = 0;
-                display = true;
-                loading = false;
-            }
-        }
-        
-        currentTaion = taions[sec][1].asFloat();
     }
+    
+    if (sec > 10) {
+        cout << rates[sec][1].asInt() << endl;
+        currentRate = rates[sec][1].asInt();
+        int beforeRate = rates[sec - 10][1].asInt();
+        acceleration = currentRate - beforeRate;
+        if (abs(acceleration) >= 9 && timer > 300) {
+            videoSpeed = 1;
+            myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,false);
+            timer = 0;
+            display = true;
+            loading = false;
+        }
+    }
+    
+    currentTaion = taions[sec][1].asFloat();
     
     fbos[0].begin();
     videos[0].draw(0, 0, 640, 360);
     fbos[0].end();
-
-    myFbo.begin();
-    video.draw(0, 0, 640, 360);
-    myFbo.end();
     
     timer++;
 }
@@ -122,39 +108,12 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     myGlitch.generateFx();
-    myFbo.draw(10,10);
-    
-    fbos[0].draw(650,10);
+    fbos[0].draw(10,10);
     
     if (apiMode) {
         if (display) {
             if(!loading){
-                cout << "movie come" << endl;
-                video.setPaused(true);
-
-                visionImage.grabScreen(10, 10, 1280, 720);
-                visionImage.save("visionImage.png");
-                
-                cout << "API CALL" << endl;
-                string json = ofSystem("php /Users/shma/work/vision/vision.php " + ofFilePath::getAbsolutePath("visionImage.png") + " LABEL_DETECTION");
-                vision.parse(json);
-                loading = true;
-            
-                words.clear();
-                for(int i = 0; i < vision["responses"][0]["labelAnnotations"][0].size(); i++) {
-                    words.push_back(vision["responses"][0]["labelAnnotations"][i]["description"].asString());
-                }
-            
-                string word = ofJoinString(words, ",");
-                string fileName = "abc.txt";
-                int frame = video.getCurrentFrame();
-                
-                b =  b + ("[" + ofToString(frame) + "," + word + "]\r\n,");
-                ofBuffer buffer = ofBuffer( b );
-                ofBufferToFile( fileName, buffer );
-            
-                video.setPaused(false);
-                cout << "movie restart" << endl;
+                callApi();
             }
         }
     } else {
@@ -162,34 +121,29 @@ void ofApp::draw(){
             visionImage.grabScreen(10, 10, 1280, 720);
             
             words.clear();
+            /**
             for (int i = 0; i < vision[cacheCount].size(); i++ ) {
                 words.push_back(vision[cacheCount][i].asString());
                 extractedWords.push_back(vision[cacheCount][i].asString());
             }
+             **/
             cacheCount++;
         }
     }
     
     ofSetColor(255, 255, 255);
+    /**
     if (display) {
         string word = ofJoinString(words, ",");
         visionImage.draw(100, 850, 320, 180);
         fontSmall.drawString("Extracted New Words : ", 480, 880);
         fontSmall.drawString(word , 480, 920);
     }
+    **/
     
-    font.drawString("Current HR : " + ofToString(currentRate), 700, 100);
-    font.drawString("Current Taion : " + ofToString(currentTaion), 700, 160);
+    font.drawString("Heart Rate : " + ofToString(currentRate), 700, 100);
+    font.drawString("Taion      : " + ofToString(currentTaion), 700, 160);
     
-    /**
-    if (acceleration >= 9) {
-        font.drawString("Acceleration : " + ofToString(acceleration) + "!", 700, 160);
-    } else {
-        font.drawString("Acceleration : " + ofToString(acceleration), 700, 160);
-    }
-     **/
-    
-    font.drawString("Extracted Words", 700, 240);
     
     for(int i; i < extractedWords.size(); i++) {
         if (i >= 20) {
@@ -198,11 +152,11 @@ void ofApp::draw(){
             fontSmall.drawString(extractedWords[i], 1300, 250 + ((i + 1) * 30));
         }
     }
+    
+    gui.draw();
 }
 
-void ofApp::callApi() {
-    
-}
+
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
@@ -261,4 +215,68 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+// オリジナル定義関数
+
+// 生体情報のJSONを読み込む。
+void ofApp::setupJsons() {
+    // 心拍数
+    string rateFile = targetDate + "/" + targetDate + "_rate.json";
+    bool rateSuccessful = rates.open(rateFile);
+    
+    if (!rateSuccessful) {
+        ofLogError("ofApp::setup")  << "rate Failed to parse JSON" << endl;
+    }
+    
+    // 体温
+    string taionFile = targetDate + "/" + targetDate + "_taion.json";
+    bool taionSuccessful = taions.open(taionFile);
+    
+    if (!taionSuccessful) {
+        ofLogError("ofApp::setup")  << "taion Failed to parse JSON" << endl;
+    }
+
+    // MEME
+    string memeFile = targetDate + "/" + targetDate + "_meme.json";
+    bool memeSuccessful = memes.open(taionFile);
+    
+    if (!memeSuccessful) {
+        ofLogError("ofApp::setup")  << "MEME Failed to parse JSON" << endl;
+    }
+
+    // MEME
+    string locationFile = targetDate + "/" + targetDate + "_place.json";
+    bool locationSuccessful = locations.open(taionFile);
+    
+    if (!locationSuccessful) {
+        ofLogError("ofApp::setup")  << "location Failed to parse JSON" << endl;
+    }
+}
+
+void ofApp::callApi() {
+    video.setPaused(true);
+    
+    visionImage.grabScreen(10, 10, 1280, 720);
+    visionImage.save("visionImage.png");
+    
+    cout << "API CALL" << endl;
+    string json = ofSystem("php /Users/shma/work/vision/vision.php " + ofFilePath::getAbsolutePath("visionImage.png") + " LABEL_DETECTION");
+    vision.parse(json);
+    loading = true;
+    
+    words.clear();
+    for(int i = 0; i < vision["responses"][0]["labelAnnotations"][0].size(); i++) {
+        words.push_back(vision["responses"][0]["labelAnnotations"][i]["description"].asString());
+    }
+    
+    string word = ofJoinString(words, ",");
+    string fileName = "abc.txt";
+    int frame = video.getCurrentFrame();
+    
+    b =  b + ("[" + ofToString(frame) + "," + word + "]\r\n,");
+    ofBuffer buffer = ofBuffer( b );
+    ofBufferToFile( fileName, buffer );
+    
+    video.setPaused(false);
 }
