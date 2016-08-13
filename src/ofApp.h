@@ -24,16 +24,25 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
+        // 独自関数
+        void ofApp::callApi();
+    
+        vector<ofVideoPlayer> videos;
+    
         ofVideoPlayer video;
         ofImage visionImage;
     
         ofxJSONElement rates;
+        ofxJSONElement taions;
         ofxJSONElement vision;
     
+    
+        vector<ofFbo> fbos;
         ofFbo myFbo;
         ofxPostGlitch myGlitch;
     
         ofTrueTypeFont font;
+        ofTrueTypeFont fontSmall;
     
         bool loading;
         visionLoader visionLoader;
