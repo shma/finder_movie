@@ -1,3 +1,6 @@
+ofxCsv
+ofxFontAwesome
+ofxFontStash
 ofxGui
 ofxJSON
 ofxOpenCv

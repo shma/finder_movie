@@ -4,20 +4,31 @@
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "99B099173356D0AE17F92A36CFA3ABD2F59AFC1A" : 0,
+    "DA8305FB59C6BE9631FC414CF60B3219A4587850" : 0,
     "5DB7C332A3A89035E93556A2A38BF414005BA671" : 0,
-    "210A84CB64DBE001319448A793DFC671846EB46E" : 0
+    "210A84CB64DBE001319448A793DFC671846EB46E" : 0,
+    "124CCB9B44A9FE82887AA6F64CCD17FE54B342A7" : 0,
+    "9B774B0323186B2BCB6A3C5ECEB04025E7DCF467" : 0,
+    "99B099173356D0AE17F92A36CFA3ABD2F59AFC1A" : 0
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "FD394B2B-E8D4-4DC3-BD0A-B28917B2BAFD",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "9DCBAEDF-3A93-46CC-9067-645FE20897BF",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "99B099173356D0AE17F92A36CFA3ABD2F59AFC1A" : "finder\/",
+    "DA8305FB59C6BE9631FC414CF60B3219A4587850" : "..\/..\/addons\/ofxFontAwesome",
     "5DB7C332A3A89035E93556A2A38BF414005BA671" : "finder\/ofxJSON\/",
-    "210A84CB64DBE001319448A793DFC671846EB46E" : "finder\/ofxPostGlitch\/"
+    "210A84CB64DBE001319448A793DFC671846EB46E" : "finder\/ofxPostGlitch\/",
+    "124CCB9B44A9FE82887AA6F64CCD17FE54B342A7" : "..\/..\/addons\/ofxCsv",
+    "9B774B0323186B2BCB6A3C5ECEB04025E7DCF467" : "..\/..\/addons\/ofxFontStash",
+    "99B099173356D0AE17F92A36CFA3ABD2F59AFC1A" : "finder\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "finder",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "finder.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:paulvollmer\/ofxCsv.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "124CCB9B44A9FE82887AA6F64CCD17FE54B342A7"
+    },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/maxillacult\/ofxPostGlitch.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
@@ -32,6 +43,16 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/shma\/finder_movie.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "99B099173356D0AE17F92A36CFA3ABD2F59AFC1A"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:armadillu\/ofxFontStash.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "9B774B0323186B2BCB6A3C5ECEB04025E7DCF467"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:kritzikratzi\/ofxFontAwesome.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "DA8305FB59C6BE9631FC414CF60B3219A4587850"
     }
   ]
 }
