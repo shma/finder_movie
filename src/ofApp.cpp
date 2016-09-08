@@ -12,12 +12,16 @@ int paddingHeight;
 vector<ofPath> paths;
 float angles[] = {0,0,0,0};
 
-int currentCluster;
 
+int currentCluster;
 int choosedCluster;
+
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    
+
+    
     // Init
     ofBackground(255, 255, 255);
     ofSetFrameRate(59.94);
@@ -104,6 +108,13 @@ void ofApp::setup(){
     }
     
     choosedCluster = 1;
+    
+    //ウィンドウ初期位置
+
+    ofSetWindowPosition(2000,0);
+    
+    //フルスクリーンにする
+//
 }
 
 
