@@ -8,25 +8,23 @@ ofVec2f videoSize;
 ofVec2f thumbVideoSize;
 
 int paddingHeight;
+int paddingWidth;
 
 vector<ofPath> paths;
 float angles[] = {0,0,0,0};
 
-
 int currentCluster;
 int choosedCluster;
 
+vector<int> cls;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    
-
-    
     // Init
     ofBackground(255, 255, 255);
     ofSetFrameRate(59.94);
     
-    font.load("MuseoSans_500.otf", 26);
+    font.load("MuseoSans_500.otf", 45);
     fontSmall.load("MuseoSans_500.otf", 22);
     
     // Videos loading
@@ -37,13 +35,14 @@ void ofApp::setup(){
     
     thumbVideoSize.set(320, 180);
     
+    image.load(targetDate + "/kmeans.png");
     for (int i = 0; i < 1; i++) {
         ofVideoPlayer v;
         videos.push_back(v);
         
         videos[i].load(targetDate + "/movie.mov");
         videos[i].play();
-        videos[i].setLoopState(OF_LOOP_NONE);
+//      videos[i].setLoopState(OF_LOOP_NONE);
         
         float speed = 1;
         videoSpeeds.push_back(videoSpeed);
@@ -65,19 +64,20 @@ void ofApp::setup(){
     minMaxTaion = getMinMax(taions);
     minMaxRate  = getMinMax(rates);
     
-    // Vision API
-    for(int i; i < vision.size(); i++) {
- //       cout << vision[i].size() << endl;
-    }
-    
     loading = false;
 
     if (csv.load(targetDate + "/rt.csv")) {
         ofLog() << csv[1][1];
     }
+    cout << "hello2" << endl;
+    for(int i = 0; i < csv.getNumRows(); i++) {
+        cout << i << endl;
+        cls.push_back(ofToInt(csv[i][3]));
+    }
+    cout << "hello" << endl;
+
     
     afont.loadFont("fontawesome-webfont.ttf", 40);
-    
     setPieChart();
     
     for (int i = 0; i < 4; i++) {
@@ -101,30 +101,31 @@ void ofApp::setup(){
 
         path.setCircleResolution(360);
         path.moveTo(150, 150);
-        path.arc( 150, 150, 150, 150, lastAngle, lastAngle + angles[i]);
+        path.arc( 150, 150, 200, 200, lastAngle, lastAngle + angles[i]);
         lastAngle += angles[i];
         
         paths.push_back(path);
     }
     
     choosedCluster = 1;
-    
     //ウィンドウ初期位置
-
-    ofSetWindowPosition(2000,0);
+    ofSetWindowPosition(1441,0);
     
-    //フルスクリーンにする
-//
+    
+    
+ 
+    
+
 }
 
-
-
+int oneMin = 60;
 //--------------------------------------------------------------
 void ofApp::update(){
     videos[0].update();
     videos[0].setSpeed(videoSpeed);
     
-    int oneMin = 60;
+   // cout << videos[0].getCurrentFrame() << endl;
+    
     int sec = 0;
     
     if (videos[0].getCurrentFrame() >= oneMin) {
@@ -133,14 +134,13 @@ void ofApp::update(){
             beforeRate = rates[sec][1].asInt();
         }
     }
+    videoSpeed = 8;
+
+    currentCluster = cls[sec];
     
-    currentCluster = ofToInt(csv[sec][3]);
-    
-    videoSpeed = 15;
 
     currentRate = rates[sec][1].asInt();
     scoreRate =  ofMap(currentRate, minMaxRate.x , minMaxRate.y , -1.0, 1.0);
-    
     
     currentTaion = taions[sec][1].asFloat();
     scoreTaion = ofMap(currentTaion, minMaxTaion.x , minMaxTaion.y, -1.0, 1.0);
@@ -148,39 +148,32 @@ void ofApp::update(){
     //cout << myGlitch.ShadeVal[0] << endl;
     
     myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,true);
-    if (currentCluster == choosedCluster) {
-        /**
-        visionImage.grabScreen(10, 10, videoSize.x, videoSize.y);
-        string imageName = targetDate + "_oneImage" + ofToString(videos[0].getCurrentFrame()) + ".png";
-        visionImage.save(imageName);
 
-        fileName = targetDate + "_active_images.csv";
+    if (currentCluster == choosedCluster) {
+        fileName = targetDate + "_" + ofToString(choosedCluster) + "_frame.csv";
         ofBuffer buffer = ofBufferFromFile(fileName);
-        buffer.append(ofBuffer(ofToString(videos[0].getCurrentFrame()) + "," + "word," + imageName +  "\r\n" ));
+        buffer.append(ofBuffer(ofToString(videos[0].getCurrentFrame()) + "\r\n" ));
         
         ofBufferToFile( fileName, buffer );
-        **/
-        videoSpeeds[0] = 1;
+        videoSpeed = 1;
         myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,false);
     }
-
+    
     
     fbos[0].begin();
     videos[0].draw(0, 0, videoSize.x, videoSize.y);
     fbos[0].end();
-    
-
-    
-    timer++;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    paddingHeight = (ofGetHeight() - videoSize.y) / 2 - 100;
+    paddingHeight = (ofGetHeight() - videoSize.y) / 2 - 200;
+    paddingWidth = 300;
 
+    // Bio-Informationなどなど
     ofPushStyle();
     ofPushMatrix();
-    ofTranslate(40, 920);
+    ofTranslate(paddingWidth, paddingHeight + videoSize.y + 150);
         ofSetColor(74, 74, 72);
     
         font.drawString("Bio-information", 0, 0);
@@ -189,12 +182,11 @@ void ofApp::draw(){
         font.drawString(ofToString(currentRate) + " bpm", 80, descY);
     
         ofSetColor(74, 74, 72);
-        afont.drawString( ofxFontAwesome::line_chart , 300, descY);
-        font.drawString(ofToString(currentTaion) + " °C", 380, descY);
-        //font.drawString("Current Cluster      : " + ofToString(currentCluster), videoSize.x + 50, paddingHeight + 100);
+        afont.drawString( ofxFontAwesome::line_chart , 330, descY);
+        font.drawString(ofToString(currentTaion) + " °C",410, descY);
     
-        font.drawString("Classification", 700, 0);
-        afont.drawString( ofxFontAwesome::pie_chart , 700, descY);
+        font.drawString("Classification", 740, 0);
+        afont.drawString( ofxFontAwesome::pie_chart , 740, descY);
         ofFill();
         switch (currentCluster) {
             case 1:
@@ -213,10 +205,10 @@ void ofApp::draw(){
             default:
                 break;
         }
-        ofDrawRectangle(765, descY - 30, 48.54, 30);
+        ofDrawRectangle(805, descY - 30, 48.54, 30);
     
         ofSetColor(74, 74, 72);
-        afont.drawString( ofxFontAwesome::play , 900, descY);
+        afont.drawString( ofxFontAwesome::play , 940, descY);
     
         switch (choosedCluster) {
             case 1:
@@ -235,7 +227,7 @@ void ofApp::draw(){
             default:
                 break;
         }
-        ofDrawRectangle(965, descY - 30, 48.54, 30);
+        ofDrawRectangle(1005, descY - 30, 48.54, 30);
     
     ofPopMatrix();
     ofPopStyle();
@@ -244,7 +236,7 @@ void ofApp::draw(){
     // 円グラフ
     ofPushStyle();
     ofPushMatrix();
-        ofTranslate(videoSize.x +  150, 120);
+        ofTranslate(paddingWidth + videoSize.x +  200, paddingHeight + 40);
     
         for (int i =0; i < 4; i++) {
             paths[i].draw();
@@ -252,30 +244,21 @@ void ofApp::draw(){
     
         ofSetColor(255, 255, 255);
         ofSetCircleResolution(360);
-        ofDrawCircle(150, 150, 50);
+        ofDrawCircle(150, 150, 80);
     ofPopMatrix();
     ofPopStyle();
 
     
-    /**
     ofPushStyle();
     ofPushMatrix();
-        ofTranslate(videoSize.x +  150, 500, 0);
-        ofSetColor(74, 74, 72);
-        ofNoFill();
-        ofSetLineWidth(3);
-        //    ofDrawRectangle(0, 0, 300, 300);
-    
-        ofDrawLine(0, 150, 300, 150);
-        ofDrawLine(150, 0, 150, 300);
-    
-        ofDrawCircle(150 + (150 * scoreTaion), 150 - (150 * scoreRate), 3);
+        ofTranslate(paddingWidth + videoSize.x +  130, paddingHeight + 500);
+        image.draw(0,0);
     ofPopMatrix();
     ofPopStyle();
-     **/
+     
 
     myGlitch.generateFx();
-    fbos[0].draw(30, paddingHeight);
+    fbos[0].draw(paddingWidth, paddingHeight);
     
     if (apiMode) {
         if (display) {
@@ -285,7 +268,6 @@ void ofApp::draw(){
         }
     }
     
-    //gui.draw();
 }
 
 
@@ -320,6 +302,79 @@ void ofApp::keyPressed(int key){
     if (key == '4') {
         choosedCluster = 4;
     }
+    
+    if (key == 'e') {
+        videos[0].setFrame(310000);
+    }
+    
+    if (key == 'a') {
+        changeDate("20160905");
+    }
+    
+    if (key == 's') {
+        changeDate("20160809");
+    }
+    
+    if (key == 'd') {
+        changeDate("20160807");
+    }
+}
+
+void ofApp::changeDate(string t) {
+    targetDate = t;
+    image.load(targetDate + "/kmeans.png");
+    
+    videos[0].close();
+    videos[0].load(targetDate + "/movie.mov");
+    videos[0].play();
+    
+    
+    setupJsons();
+    averageTaion = getAverage(taions);
+    minMaxTaion = getMinMax(taions);
+    minMaxRate  = getMinMax(rates);
+    
+    loading = false;
+    
+    csv.clear();
+    if (csv.load(targetDate + "/rt.csv")) {
+        ofLog() << csv[1][1];
+    }
+    
+    cls.clear();
+    for(int i = 0; i < csv.getNumRows(); i++) {
+        cls.push_back(ofToInt(csv[i][3]));
+    }
+    
+    setPieChart();
+    paths.clear();
+    for (int i = 0; i < 4; i++) {
+        ofPath path;
+        switch (i) {
+            case 0:
+                path.setColor(ofColor(69,105,144));
+                break;
+            case 1:
+                path.setColor(ofColor(239,118,122));
+                break;
+            case 2:
+                path.setColor(ofColor(73,190,170));
+                break;
+            case 3:
+                path.setColor(ofColor(238,184,104));
+                break;
+            default:
+                break;
+        }
+        
+        path.setCircleResolution(360);
+        path.moveTo(150, 150);
+        path.arc( 150, 150, 200, 200, lastAngle, lastAngle + angles[i]);
+        lastAngle += angles[i];
+        
+        paths.push_back(path);
+    }
+    choosedCluster = 1;
     
 }
 
@@ -408,8 +463,6 @@ void ofApp::callApi() {
         words.push_back(vision["responses"][0]["labelAnnotations"][i]["description"].asString());
     }
     
-
-    
     string word = ofJoinString(words, ",");
     string fileName = "abc.txt";
     int frame = video.getCurrentFrame();
@@ -423,19 +476,11 @@ void ofApp::callApi() {
 
 
 void ofApp::setPieChart() {
-    
-    
-    
     int maxCl;
-    
-    
     int rows = csv.getNumRows();
-
-
 
     for(int i = 0; i < rows; i++) {
         int cl = ofToInt(csv[i][3]);
-        
         angles[cl - 1] = 1 + angles[cl - 1];
     }
     

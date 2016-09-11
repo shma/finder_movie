@@ -4,4 +4,5 @@ ofxFontStash
 ofxGui
 ofxJSON
 ofxOpenCv
+ofxOsc
 ofxPostGlitch

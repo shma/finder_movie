@@ -27,6 +27,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+        void changeDate(string t);
         float getAverage(ofxJSONElement vals);
     
         // 独自関数
@@ -116,5 +117,6 @@ class ofApp : public ofBaseApp{
         int lastAngle = -90;   //通常の円グラフの始点にするため、スタート地点を設定
         int angle0 = 60;  //1つ目のグラフの角度
         int angle1 = 40;  //2つ目のグラフの角度
-
+    
+  
 };
