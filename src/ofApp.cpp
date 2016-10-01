@@ -1,7 +1,6 @@
 #include "ofApp.h"
 
 string targetDate = "20160905";
-
 int normalPlayTime = 300;
 
 ofVec2f videoSize;
@@ -42,7 +41,6 @@ void ofApp::setup(){
         
         videos[i].load(targetDate + "/movie.mov");
         videos[i].play();
-//      videos[i].setLoopState(OF_LOOP_NONE);
         
         float speed = 1;
         videoSpeeds.push_back(videoSpeed);
@@ -66,16 +64,17 @@ void ofApp::setup(){
     
     loading = false;
 
-    if (csv.load(targetDate + "/rt.csv")) {
-        ofLog() << csv[1][1];
-    }
-    cout << "hello2" << endl;
+    
+    csv.load(targetDate + "/rt.csv");
+    
     for(int i = 0; i < csv.getNumRows(); i++) {
-        cout << i << endl;
-        cls.push_back(ofToInt(csv[i][3]));
+        // Rt mode
+        int a = ofToInt(csv[i][3]);
+        
+        // D mode
+//        int a = ofToInt(csv[i][2]) + 1;
+        cls.push_back(a);
     }
-    cout << "hello" << endl;
-
     
     afont.loadFont("fontawesome-webfont.ttf", 40);
     setPieChart();
@@ -111,22 +110,18 @@ void ofApp::setup(){
     //ウィンドウ初期位置
     ofSetWindowPosition(1441,0);
     
-    
-    
- 
-    
-
+    for (int i = 0; i < cls.size(); i++) {
+        cout << cls[i] << endl;
+    }
 }
-
+int sec;
 int oneMin = 60;
 //--------------------------------------------------------------
 void ofApp::update(){
     videos[0].update();
     videos[0].setSpeed(videoSpeed);
     
-   // cout << videos[0].getCurrentFrame() << endl;
-    
-    int sec = 0;
+    sec = 0;
     
     if (videos[0].getCurrentFrame() >= oneMin) {
         sec = videos[0].getCurrentFrame() / oneMin;
@@ -134,10 +129,8 @@ void ofApp::update(){
             beforeRate = rates[sec][1].asInt();
         }
     }
-    videoSpeed = 8;
-
+    videoSpeed = 10;
     currentCluster = cls[sec];
-    
 
     currentRate = rates[sec][1].asInt();
     scoreRate =  ofMap(currentRate, minMaxRate.x , minMaxRate.y , -1.0, 1.0);
@@ -159,7 +152,6 @@ void ofApp::update(){
         myGlitch.setFx(OFXPOSTGLITCH_CONVERGENCE,false);
     }
     
-    
     fbos[0].begin();
     videos[0].draw(0, 0, videoSize.x, videoSize.y);
     fbos[0].end();
@@ -167,6 +159,7 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    
     paddingHeight = (ofGetHeight() - videoSize.y) / 2 - 200;
     paddingWidth = 300;
 
@@ -187,6 +180,7 @@ void ofApp::draw(){
     
         font.drawString("Classification", 740, 0);
         afont.drawString( ofxFontAwesome::pie_chart , 740, descY);
+    
         ofFill();
         switch (currentCluster) {
             case 1:
@@ -268,6 +262,40 @@ void ofApp::draw(){
         }
     }
     
+    ofPushStyle();
+    ofPushMatrix();
+    ofTranslate(paddingWidth, paddingHeight + videoSize.y - 10);
+    
+    int total = videos[0].getTotalNumFrames();
+    float c = ofMap(videos[0].getCurrentFrame(), 0, total, 0, cls.size());
+    
+    ofSetColor(0,0,0);
+    ofDrawRectangle(c * 0.24, 20, 0.24, 10);
+    for (int i = 0; i < cls.size(); i++) {
+        
+        switch (cls[i]) {
+            case 1:
+                ofSetColor(69,105,144);
+                break;
+            case 2:
+                ofSetColor(239,118,122);
+                break;
+            case 3:
+                ofSetColor(73,190,170);
+                break;
+            case 4:
+                ofSetColor(238,184,104);
+                break;
+            default:
+                ofSetColor(255,255,255);
+                break;
+        }
+        ofDrawRectangle(i * 0.24, 10, 0.24, 10);
+    }
+
+    ofPopMatrix();
+    ofPopStyle();
+    
 }
 
 
@@ -308,19 +336,27 @@ void ofApp::keyPressed(int key){
     }
     
     if (key == 'a') {
-        changeDate("20160905");
+        changeDate("20160905", "r");
     }
     
     if (key == 's') {
-        changeDate("20160809");
+        changeDate("20160809", "r");
     }
     
     if (key == 'd') {
-        changeDate("20160807");
+        changeDate("20160807", "r");
+    }
+    
+    if (key == 'l') {
+        changeDate(targetDate, "d");
+    }
+    
+    if (key == 'k') {
+        changeDate(targetDate, "r");
     }
 }
 
-void ofApp::changeDate(string t) {
+void ofApp::changeDate(string t, string m) {
     targetDate = t;
     image.load(targetDate + "/kmeans.png");
     
@@ -337,13 +373,26 @@ void ofApp::changeDate(string t) {
     loading = false;
     
     csv.clear();
-    if (csv.load(targetDate + "/rt.csv")) {
-        ofLog() << csv[1][1];
-    }
-    
-    cls.clear();
-    for(int i = 0; i < csv.getNumRows(); i++) {
-        cls.push_back(ofToInt(csv[i][3]));
+    if (m == "r") {
+        if (csv.load(targetDate + "/rt.csv")) {
+            ofLog() << csv[1][1];
+        }
+        
+        cls.clear();
+        for(int i = 0; i < csv.getNumRows(); i++) {
+            cls.push_back(ofToInt(csv[i][3]));
+        }
+    } else if (m == "d") {
+        if (csv.load(targetDate + "/d.csv")) {
+            ofLog() << csv[1][1];
+        }
+        
+        cls.clear();
+        
+        for(int i = 0; i < csv.getNumRows(); i++) {
+            int a = ofToInt(csv[i][2]) + 1;
+            cls.push_back(a);
+        }
     }
     
     setPieChart();
@@ -477,10 +526,10 @@ void ofApp::callApi() {
 
 void ofApp::setPieChart() {
     int maxCl;
-    int rows = csv.getNumRows();
+    int rows = cls.size();
 
     for(int i = 0; i < rows; i++) {
-        int cl = ofToInt(csv[i][3]);
+        int cl = cls[i];
         angles[cl - 1] = 1 + angles[cl - 1];
     }
     

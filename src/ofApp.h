@@ -27,7 +27,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
-        void changeDate(string t);
+        void changeDate(string t, string m);
         float getAverage(ofxJSONElement vals);
     
         // 独自関数
